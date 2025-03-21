@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Angle of View Calculator</title>
+  <style>
+    /* Dark, grainy background with noise overlay */
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at 50% 50%, #2b2b2b, #000);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #fff;
+      position: relative;
+    }
+    body::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' fill='white'/%3E%3C/svg%3E");
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .calculator {
+      width: 340px;
+      padding: 20px;
+      border-radius: 16px;
+      background: rgba(20,20,20,0.75);
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      position: relative;
+      z-index: 1;
+    }
+    h1 {
+      font-size: 1.3em;
+      margin-bottom: 1em;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-size: 0.9em;
+      font-weight: 500;
+    }
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(40,40,40,0.9);
+      color: #fff;
+      font-size: 0.95em;
+      outline: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      box-shadow: none;
+    }
+    input[type="number"]::placeholder {
+      color: rgba(255,255,255,0.6);
+    }
+    input[type="number"]:focus,
+    select:focus {
+      background: rgba(40,40,40,1);
+    }
+    select {
+      background-image: none;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      border: none;
+      border-radius: 8px;
+      background: #ff5722;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1em;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 1.1em;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .diagram {
+      margin-top: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <h1>Angle of View Calculator</h1>
+    
+    <!-- Sensor Width Dropdown -->
+    <label for="sensorSelect">Sensor Width (mm):</label>
+    <select id="sensorSelect" onchange="toggleCustom('sensorSelect','sensorCustom')">
+      <option value="24.89">Alexa Mini – 28.25 mm</option>
+      <option value="35.0">Alexa 35 – 27.99 mm</option>
+      <option value="54.12">Alexa 65 – 54.12 mm</option>
+      <option value="12.52">Super16 – 12.52 mm</option>
+      <option value="10.26">Standard 16 – 10.26 mm</option>
+      <option value="4.8">8mm – 4.8 mm</option>
+      <option value="5.79">Super 8mm – 5.79 mm</option>
+      <option value="custom">Custom</option>
+    </select>
+    <input type="number" id="sensorCustom" placeholder="Enter custom sensor width in mm" step="any" style="display:none; margin-top:5px;">
+    
+    <!-- Lens Focal Length Input -->
+    <label for="focalLength">Lens Focal Length (mm):</label>
+    <input type="number" id="focalLength" placeholder="e.g. 50" step="any">
+    
+    <button onclick="calculateAoV()">Calculate</button>
+    
+    <div class="result" id="result"></div>
+    <div class="diagram" id="diagram"></div>
+  </div>
+
+  <script>
+    // Toggle custom input for dropdowns
+    function toggleCustom(selectId, customInputId) {
+      const selectEl = document.getElementById(selectId);
+      const customInputEl = document.getElementById(customInputId);
+      customInputEl.style.display = (selectEl.value === 'custom') ? 'block' : 'none';
+    }
+    
+    function getValue(selectId, customInputId) {
+      const selectEl = document.getElementById(selectId);
+      if (selectEl.value === 'custom') {
+        return parseFloat(document.getElementById(customInputId).value);
+      }
+      return parseFloat(selectEl.value);
+    }
+    
+    function calculateAoV() {
+      // Get sensor width and focal length
+      const sensorWidth = getValue('sensorSelect', 'sensorCustom');
+      const focalLength = parseFloat(document.getElementById('focalLength').value);
+      
+      if (isNaN(sensorWidth) || sensorWidth <= 0 || isNaN(focalLength) || focalLength <= 0) {
+        document.getElementById('result').innerText = 'Please enter valid positive numbers for sensor width and focal length.';
+        document.getElementById('diagram').innerHTML = '';
+        return;
+      }
+      
+      // Calculate Angle of View (AoV) in degrees
+      const aovRadians = 2 * Math.atan(sensorWidth / (2 * focalLength));
+      const aovDegrees = aovRadians * (180 / Math.PI);
+      
+      // Display the AoV result
+      document.getElementById('result').innerHTML = 'Angle of View: ' + aovDegrees.toFixed(1) + '°';
+      
+      // Draw the diagram with the updated layout
+      drawDiagram(aovDegrees);
+    }
+    
+    function drawDiagram(aovDegrees) {
+      // SVG dimensions
+      const svgWidth = 300, svgHeight = 100;
+      // Define padding values:
+      const emojiPadding = 20;    // space from left edge for the emoji
+      const rayOriginOffset = 20; // additional offset from emoji to start the cone
+      
+      // Camera emoji position (placed to the left)
+      const emojiX = emojiPadding;
+      const emojiY = svgHeight / 2;
+      
+      // Define the origin of the rays to the right of the emoji
+      const originX = emojiX + rayOriginOffset;
+      const originY = emojiY;
+      
+      // Set the length for the rays
+      const rayLength = 150;
+      // Half of the AoV in radians
+      const halfAngle = (aovDegrees / 2) * (Math.PI / 180);
+      
+      // Calculate endpoints of the top and bottom rays (opening to the right)
+      const topX = originX + rayLength * Math.cos(halfAngle);
+      const topY = originY - rayLength * Math.sin(halfAngle);
+      const bottomX = originX + rayLength * Math.cos(halfAngle);
+      const bottomY = originY + rayLength * Math.sin(halfAngle);
+      
+      // Construct the SVG diagram:
+      const svgContent = `
+        <svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">
+          <!-- Draw rays representing the Angle of View -->
+          <line x1="${originX}" y1="${originY}" x2="${topX}" y2="${topY}" stroke="#ff5722" stroke-width="2" />
+          <line x1="${originX}" y1="${originY}" x2="${bottomX}" y2="${bottomY}" stroke="#ff5722" stroke-width="2" />
+          <!-- Optionally draw a faint line showing the center direction -->
+          <line x1="${originX}" y1="${originY}" x2="${originX + rayLength}" y2="${originY}" stroke="#ff5722" stroke-dasharray="4,4" stroke-width="1" />
+          <!-- Draw the camera emoji to the left -->
+          <text x="${emojiX}" y="${emojiY + 8}" font-size="24" text-anchor="start">📷</text>
+        </svg>
+      `;
+      
+      document.getElementById('diagram').innerHTML = svgContent;
+    }
+  </script>
+</body>
+</html>
