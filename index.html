@@ -30,7 +30,6 @@
       pointer-events: none;
       z-index: 0;
     }
-
     /* Glassmorphic calculator container with a dark twist */
     .calculator {
       width: 340px;
@@ -43,20 +42,17 @@
       position: relative;
       z-index: 1;
     }
-
     h1 {
       font-size: 1.3em;
       margin-bottom: 1em;
       text-align: center;
     }
-
     label {
       display: block;
       margin-top: 10px;
       font-size: 0.9em;
       font-weight: 500;
     }
-
     /* Flat dark inputs and selects */
     input[type="number"],
     select {
@@ -81,12 +77,10 @@
     select:focus {
       background: rgba(40, 40, 40, 1);
     }
-
     /* Remove default dropdown arrow if desired (optional) */
     select {
       background-image: none;
     }
-
     button {
       width: 100%;
       padding: 12px;
@@ -104,7 +98,6 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
     }
-
     .result {
       margin-top: 20px;
       font-size: 1.1em;
@@ -116,29 +109,26 @@
 <body>
   <div class="calculator">
     <h1>Foot Candle Calculator</h1>
-
     <!-- Framerate -->
     <label for="framerate">Framerate (fps):</label>
     <input type="number" id="framerate" placeholder="e.g. 24" step="any">
-
-    <!-- ND Dropdown (in 0.3-stop increments, with "No ND" labeled) -->
-    <label for="ndSelect">ND (stops):</label>
+    <!-- ND Dropdown (optical density; 0.3 equals one stop) -->
+    <label for="ndSelect">ND (optical density):</label>
     <select id="ndSelect" onchange="toggleCustom('ndSelect','ndCustom')">
       <option value="0">No ND (0)</option>
-      <option value="0.3">0.3</option>
-      <option value="0.6">0.6</option>
-      <option value="0.9">0.9</option>
-      <option value="1.2">1.2</option>
-      <option value="1.5">1.5</option>
-      <option value="1.8">1.8</option>
-      <option value="2.1">2.1</option>
-      <option value="2.4">2.4</option>
-      <option value="2.7">2.7</option>
-      <option value="3.0">3.0</option>
+      <option value="0.3">0.3 (1 stop)</option>
+      <option value="0.6">0.6 (2 stops)</option>
+      <option value="0.9">0.9 (3 stops)</option>
+      <option value="1.2">1.2 (4 stops)</option>
+      <option value="1.5">1.5 (5 stops)</option>
+      <option value="1.8">1.8 (6 stops)</option>
+      <option value="2.1">2.1 (7 stops)</option>
+      <option value="2.4">2.4 (8 stops)</option>
+      <option value="2.7">2.7 (9 stops)</option>
+      <option value="3.0">3.0 (10 stops)</option>
       <option value="custom">Custom</option>
     </select>
-    <input type="number" id="ndCustom" placeholder="Enter custom ND in stops" step="any" style="display:none; margin-top:5px;">
-
+    <input type="number" id="ndCustom" placeholder="Enter custom ND (optical density)" step="any" style="display:none; margin-top:5px;">
     <!-- Aperture (T-stop) Dropdown (expanded set) -->
     <label for="apertureSelect">T-stop:</label>
     <select id="apertureSelect" onchange="toggleCustom('apertureSelect','apertureCustom')">
@@ -179,7 +169,6 @@
       <option value="custom">Custom</option>
     </select>
     <input type="number" id="apertureCustom" placeholder="Enter custom T-stop" step="any" style="display:none; margin-top:5px;">
-
     <!-- Shutter Angle Dropdown -->
     <label for="shutterSelect">Shutter Angle (°):</label>
     <select id="shutterSelect" onchange="toggleCustom('shutterSelect','shutterCustom')">
@@ -191,7 +180,6 @@
       <option value="custom">Custom</option>
     </select>
     <input type="number" id="shutterCustom" placeholder="Enter custom shutter angle" step="any" style="display:none; margin-top:5px;">
-
     <!-- ISO Dropdown -->
     <label for="isoSelect">ISO (EI):</label>
     <select id="isoSelect" onchange="toggleCustom('isoSelect','isoCustom')">
@@ -205,9 +193,7 @@
       <option value="custom">Custom</option>
     </select>
     <input type="number" id="isoCustom" placeholder="Enter custom ISO" step="any" style="display:none; margin-top:5px;">
-
     <button onclick="calculateFootCandles()">Calculate</button>
-
     <div class="result" id="result"></div>
   </div>
 
@@ -242,14 +228,16 @@
         document.getElementById('result').innerText = 'Please enter valid positive numbers for all parameters.';
         return;
       }
-      // 3) Compute exposure time from shutter angle & framerate
+      // 3) Compute the exposure time from shutter angle & framerate
       const exposureTime = (shutterAngle / 360) / framerate;
-      // 4) Cinematography-based formula:
-      // footcandles = 26.6 * (T-stop^2 / (exposureTime * ISO)) * 2^(ND)
-      const footCandles = 26.6 * (tStop * tStop) / (exposureTime * iso) * Math.pow(2, nd);
-      // 5) Convert footcandles to lux (1 footcandle ≈ 10.764 lux)
+      // 4) Convert ND (optical density) to stops; 0.3 equals one stop.
+      const stops = nd / 0.3;
+      // 5) Use the cinematography formula:
+      // footcandles = 26.6 * (T-stop^2 / (exposureTime * ISO)) * 2^(stops)
+      const footCandles = 26.6 * (tStop * tStop) / (exposureTime * iso) * Math.pow(2, stops);
+      // 6) Convert footcandles to lux (1 footcandle ≈ 10.764 lux)
       const lux = footCandles * 10.764;
-      // 6) Round and display results
+      // 7) Round and display results
       document.getElementById('result').innerHTML =
         'Illuminance: ' + lux.toFixed(0) + ' lux<br>' +
         'Footcandles: ' + footCandles.toFixed(1);
